@@ -212,7 +212,7 @@ function showOrderForm() {
 	if(orderFormVisible == 0) {
 		$("#mapContainer").removeClass("span9");
 		$("#mapContainer").addClass("span6");
-		var orderForm = "<form id=\"OrderForm\" action=\"okart.cgi\" method=\"post\" name=\"OrderForm\">"+
+		var orderForm = "<form id=\"OrderForm\" action=\"python/okart.cgi\" method=\"post\" name=\"OrderForm\">"+
 		"<h4>Bestillingsskjema:</h4>"+
 		"<p>Navn:</p>"+
 		"<input type=\"text\" name=\"name\">"+

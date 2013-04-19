@@ -1,7 +1,5 @@
 <?php
-require('php/Auth.php');
-$auth = new Auth();
-if($auth->check()) {
+
 
 require('php/sql.php');
 
@@ -36,6 +34,23 @@ foreach ($_POST['mapNames'] as $key => $mapName) {
 	print "Error!: " . $e->getMessage() . "<br/>";
 	die();
 }
-header('Location: takk.php#orderid-'.$orderId);
+
+$sql = "SELECT * FROM okart_users WHERE sendmail = 1;";
+$sth = $dbh->prepare($sql);
+$sth->execute();
+function sendEmailAlert($email) {
+	$subject = "Ny kartbestilling fra ".$_POST['orderName'];
+	$message = "Hei!
+	Det er kommet en ny kartbestilling fra ".$_POST['orderName']."
+	Logg inn på http://folk.ntnu.no/torbjvi/okart/login.php for å se den";
+	$headers = "From:" . $email;
+	mail($email,$subject,$message,$headers);
+
+} 
+while($result = $sth->fetch()) {
+	sendEmailAlert($result["email"]);
 }
+
+header('Location: takk.php#orderid-'.$orderId);
+
 ?>

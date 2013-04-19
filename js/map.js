@@ -344,7 +344,7 @@
 			retriveGeoJsonArea(areaId);
 		} else {
 			infoMarker = L.marker([63.37908, 10.43305]).addTo(map)
-		    .bindPopup('<h6>Velkommen til Okart-bestilleren!</h6><p>Før du begynner må du trykke på et område i listen til venstre for å se det i kartet.</p><p>Etter det kan du trykke på et kartutsnitt markert med rødt for å se mer informasjon og for å bestille det.</p><p>Du kan også bruke verktøyene til venstre for å tegne ditt eget.</p>')
+		    .bindPopup('<h3>Velkommen til Okart!</h3><h5>Før du begynner må du trykke på et område i listen til venstre for å se det i kartet.</h5><h6>Etter det kan du trykke på et kartutsnitt markert med rødt for å se mer informasjon og for å legge det til bestilling.</h6><h6>Du kan også bruke verktøyene til venstre for å tegne ditt eget.</h6>')
 		    .openPopup();
 		}
 

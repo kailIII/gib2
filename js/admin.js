@@ -3,7 +3,6 @@
 		var basketGroup = L.featureGroup();
 		basketGroup.addTo(map);
 		var basketId= 0;
-		var predefinedMaps = L.geoJson();
 		
 		function clearDisplayedMaps() {
 			if(map.hasLayer(geoJson)) {
@@ -12,22 +11,22 @@
 					map.removeLayer(layer.tileLayer);
 				});
 			}
-			if(map.hasLayer(predefinedMaps)) {
-				map.removeLayer(predefinedMaps);
-				predefinedMaps.eachLayer(function (layer) {
+			if(map.hasLayer(test)) {
+				test.eachLayer(function (layer) {
 					map.removeLayer(layer.tileLayer);
 				});
+				map.removeLayer(test);
 			}
 
 		}
 		function addAreaGeoJsonData(area) {	
-			
+			clearDisplayedMaps();
 			geoJson =  L.geoJson(area, {
 				style: areaStyle
 			});
 			
 			geoJson.eachLayer(function (layer) {
-				
+				layer.name = layer.feature.properties.name;
 				layer.predefined = true;
 				layer.tileLayer = L.TileLayer.boundaryCanvas(osmUrl, {
 	    			boundary: layer.getLatLngs(), 
@@ -44,50 +43,154 @@
 			geoJson.addTo(map);
 			map.fitBounds(geoJson.getBounds());
 			map.zoomIn();
-			predefinedMaps.bringToFront();
 		}
-		
-		function addPredefinedMaps(area) {	
+		var test =  L.geoJson();
+		function addAreaGeoJsonOrder(area) {	
 			
-			predefinedMaps =  L.geoJson(area, {
+			
+			map.removeLayer(test);
+			test =  L.geoJson(area, {
 				style: myStyle
 			});
 			
-			predefinedMaps.eachLayer(function (layer) {
+			test.eachLayer(function (layer) {
 				layer.name = layer.feature.properties.name;
-				layer.description = layer.feature.properties.description;
-				layer.areaId = areaId;
 				layer.predefined = true;
-				layer.tileLayer = L.TileLayer.boundaryCanvas(osmUrl, {
-	    			boundary: layer.getLatLngs(), 
-	    			attribution: osmAttribution,
-	    			minZoom: 8
-				});
+				osmUrl = 'tiles/'+layer.feature.properties.area+'/{z}_{x}_{y}.png';
 				
-					layer.on("mouseover", function (e) {
-							layer.setStyle(hiStyle);
+				
+				
+			});
+			listMapsShown();
+			test.addTo(map);
+			test.bringToFront();
+			map.fitBounds(test.getBounds());
+			
+		}
+		var tilesLoaded = [];
+		
+		var tempJson = L.geoJson();
+		function addOkartTiles(areaid) {
+			
+			var tileUrl = 'tiles/'+areaid+'/{z}_{x}_{y}.png';
+			$.get('php/sql2geojson.php?id='+areaid, function (data) {
+			     tempJson = L.geoJson(geoarea);
+			  }, "script");
+			tempJson.addTo(map);
+			tempJson.eachLayer(function (layer) {
+				alert(layer.getLatLngs());
+			});
+			tempJson.getBounds();
+			
+		}
+		
+		function closeOrderInfoAndMap() {
+			$("#mapRow").removeClass("row-fluid");
+			$("#orderInfoRow").removeClass("row-fluid");
+			$("#mapRow").addClass("hidden");
+			$("#orderInfoRow").addClass("hidden");
+		}
+		function openOrderInfoAndMap() {
+			$("#mapRow").addClass("row-fluid");
+			$("#mapRow").addClass("mapRow");
+			$("#mapRow").removeClass("hidden");
+			$("#orderInfoRow").addClass("row-fluid");
+			$("#orderInfoRow").removeClass("hidden");
+			map.invalidateSize();
+			
 
-						});
-					layer.on("mouseout", function (e) {
-							layer.setStyle(myStyle);
+		}
+		currentSelectedLayer = null;
+		function listMapsShown() {
+			var head = document.createElement("h4");
+			head.innerHTML = "Kart:"
+			var mapLists = $("#maps");
+			mapLists.html(' ');
+			mapLists.append(head);
+			test.eachLayer(function (layer) {
+				var par = document.createElement("p");
+				var link = document.createElement("a");
+				link.href = "javascript:void()";
+				link.innerHTML = layer.name;
 
-						});
-					layer.on("click", function (e) {
-							currentSelectedLayer = layer;
-					});
-					var popupContent = "<h5>"+layer.name+"</h5><p>"+layer.description+"</p><p><a href=\"javascript:void()\" onclick=\"addToBasket(currentSelectedLayer)\">Legg i kurv</a></p>";
-					layer.bindPopup(popupContent);
-					
-					
+				link.onclick = function () { 
+					if(currentSelectedLayer != null) {
+						currentSelectedLayer.setStyle(myStyle);
+					}
+					currentSelectedLayer = layer;
+					map.fitBounds(layer.getBounds()); 
+					layer.setStyle(hiStyle); 
+				};
+				par.appendChild(link);
+				mapLists.append(par);
+
+
 			});
 
-			predefinedMaps.addTo(map);
-			predefinedMaps.bringToFront();
+		}
+		function archive(id, bool) {
+			if(bool) {
+				var url = 'php/archive.php?id='+id;
+			} else {
+				
+				var url = 'php/archive.php?restore=1&id='+id;
+			
+			}
+			$.get(url);
+			$("#orderRow"+id).remove();
+			closeOrderInfoAndMap();
+		}
+		
+		function addTiles(areaid) {
+			var tileUrl = 'tiles/'+areaid+'/{z}_{x}_{y}.png';
+			
+			$.get('php/sql2geojson.php?id='+areaid, function (data) {
+			     var geoJsons = L.geoJson(geoarea);
+			     geoJsons.eachLayer(function (layer) {
+					    L.TileLayer.boundaryCanvas(tileUrl, {
+		    			boundary: layer.getLatLngs(), 
+		    			attribution: osmAttribution
+						}).addTo(map);
+			     });
+			  }, "script");
+			
+			
 			
 			
 		}
+		
+		function displayAllTiles() {
+			
+			$.getJSON('php/areas.php', function (data) {
+				for (var i = 0; i < data.areas.length; i++) {
+					data.areas[i];
+					addTiles(data.areas[i]);
+	
+				};
 
+			});
+		}
+		displayAllTiles();
+		function displayOrderData(orderid) {
+			var info = orderInfo[orderid];
+			if(document.location.search.indexOf("archive=1")>-1) {
+				var bool = false;
+			}
+			else {
+				var bool = true;
+			}
+			$("#finishButton").click(function () {
+				archive(orderid, bool);
+			});
+			$("#name").html(info[2]);
+			$("#adress").html(info[3]);
+			$("#post").html(info[4]+" "+info[5]);
+			$("#email").html(info[6]);
+			$("#tel").html(info[7]);
+			$("#club").html(info[8]);
+			$("#rundate").html(info[9]);
 
+		}
 		function addToBasket(layer) {
 			drawnItems.removeLayer(layer);
 			basketGroup.addLayer(layer);
@@ -127,9 +230,6 @@
 			
 			map.fitBounds(layer.getBounds());
 		}
-
-		map.addControl(drawControl);
-
 		function createMapDivs(layer) {
 			/*
 		<div class="row-fluid">
@@ -141,7 +241,6 @@
             </div>
         </div>
 			*/
-
 			var row = document.createElement("div");
 			row.id = "orderMapRow-"+layer.basketId;
 			row.className = "row-fluid";
@@ -161,8 +260,23 @@
 			deleteLink.onclick = function () {
 				removeFromBasket(layer);
 			};
-
 			var theForm = document.forms['submitOrder'];
+			var nameInput = document.createElement("input");
+			nameInput.name = "mapNames[]";
+			nameInput.value = layer.name;
+			nameInput.type = "hidden";
+			theForm.appendChild(nameInput);
+			var areaInput = document.createElement("input");
+			areaInput.name = "mapAreas[]";
+			areaInput.value = layer.areaId;
+			areaInput.type = "hidden";
+			theForm.appendChild(areaInput);
+			var polygonInput = document.createElement("input");
+			polygonInput.name = "mapPolygons[]";
+			polygonInput.value = latLngsToMysqlString(layer.getLatLngs());
+			polygonInput.type = "hidden";
+			theForm.appendChild(polygonInput);
+
 			var par1 = document.createElement("p");
 			par1.appendChild(mapLink);
 			var par2 = document.createElement("p");
@@ -175,44 +289,6 @@
 
 
 		}
-		function checkInputsIsSet(inputIds) {
-			var set = true;
-			for (var i = 0; i < inputIds.length; i++) {
-				var input = document.getElementById(inputIds[i]);
-				if(input.value == "") {
-					$(input).addClass("missingInput");
-					var set = false;
-				}
-			}
-			
-			return set;
-		}
-		function submitOrderForm() {
-			var theForm = document.forms['submitOrder'];
-			var hasLayers = false;
-			basketGroup.eachLayer(function (layer) {
-				var nameInput = document.createElement("input");
-				nameInput.name = "mapNames[]";
-				nameInput.value = layer.name;
-				nameInput.type = "hidden";
-				theForm.appendChild(nameInput);
-				var areaInput = document.createElement("input");
-				areaInput.name = "mapAreas[]";
-				areaInput.value = layer.areaId;
-				areaInput.type = "hidden";
-				theForm.appendChild(areaInput);
-				var polygonInput = document.createElement("input");
-				polygonInput.name = "mapPolygons[]";
-				polygonInput.value = latLngsToMysqlString(layer.getLatLngs());
-				polygonInput.type = "hidden";
-				theForm.appendChild(polygonInput);
-				hasLayers = true;
-			});
-			var requiredInputs = ["orderName", "orderStreet","orderPostnr","orderPlace","orderEmail","orderTel"];
-			if(checkInputsIsSet(requiredInputs) && hasLayers) {
-				theForm.submit();
-			}
-		}
 		function removeFromBasket(layer) {
 			$("#basketLayerLink-"+layer.basketId).remove();
 			$("#orderMapRow-"+layer.basketId).remove();
@@ -223,29 +299,21 @@
 		}
 		var areaId;
 		function retriveGeoJsonArea(id) {
-			clearDisplayedMaps();
-			map.removeLayer(infoMarker);
-			areaId = id;
 			osmUrl = 'tiles/'+id+'/{z}_{x}_{y}.png';
 			$.get('php/sql2geojson.php?id='+id, function (data) {
 			     addAreaGeoJsonData(geoarea);
 			  }, "script");
-			retriveMaps(id);
 			
 		}
-		function retriveMaps(id) {
-			areaId = id;
-			$.get('php/sql2geojson.php?type=map&id='+id, function (data) {
-			     addPredefinedMaps(geoarea);
+		function retriveGeoJsonOrders(id) {
+			openOrderInfoAndMap();
+			displayOrderData(id);
+			$.get('php/order2geojson.php?type=order&id='+id, function (data) {
+			     addAreaGeoJsonOrder(geoarea);
 			  }, "script");
 			
 		}
-		map.on('draw:drawstart', function (e) {
-			map.removeLayer(predefinedMaps);
-		});
-		map.on('draw:drawstop', function (e) {
-			map.addLayer(predefinedMaps);
-		});
+		var orderInfo = [];
 		map.on('draw:created', function (e) {
 			var type = e.layerType,
 				layer = e.layer;
@@ -271,12 +339,11 @@
 			});
 			drawnItemsCounter++;
 			layer.name = "Egendefinert "+drawnItemsCounter;
-			var popupContent = "<a href=\"javascript:void()\" onclick=\"deleteDrawnLayer(currentSelectedLayer)\">Slett</a> - <a href=\"javascript:void()\" onclick=\"addToBasket(currentSelectedLayer)\">Legg i kurv</a>";
+			var popupContent = "<h4 class=\"mapTitle\">"+
+						layer.name + "</h4><a href=\"javascript:void()\" onclick=\"deleteDrawnLayer(currentSelectedLayer)\">Slett</a> - <a href=\"javascript:void()\" onclick=\"addToBasket(currentSelectedLayer)\">Legg i kurv</a>";
 
 			
 			layer.bindPopup(popupContent);
-			layer.openPopup();
-			currentSelectedLayer = layer;
 		});
 		function deleteDrawnLayer(layer) {
 			map.removeLayer(layer.tileLayer);
@@ -310,13 +377,13 @@
 
 		}
 		function showOrderForm() {
-			var mapContainer = $("#map");
+			var mapContainer = $("#mapContainer");
 			var orderForm = $("#orderFormContainer");
 			var menus = $("#menus");
 			menus.removeClass("span2");
 			menus.addClass("hidden");
 			mapContainer.removeClass("span10");
-			mapContainer.addClass("span5");
+			mapContainer.addClass("span6");
 			orderForm.removeClass("hidden");
 			orderForm.addClass("span6");
 			map.invalidateSize();
@@ -325,26 +392,16 @@
 
 		}
 		function closeOrderForm() {
-			var mapContainer = $("#map");
+			var mapContainer = $("#mapContainer");
 			var orderForm = $("#orderFormContainer");
 			var menus = $("#menus");
 			menus.addClass("span2");
 			menus.removeClass("hidden");
 			mapContainer.addClass("span10");
-			mapContainer.removeClass("span5");
+			mapContainer.removeClass("span6");
 			orderForm.addClass("hidden");
 			orderForm.removeClass("span6");
 			map.invalidateSize();
 			
 		}
-		var infoMarker = L.marker();
-		var hash = window.location.hash.substring(1);
-		if(hash.indexOf("area-")>-1) {
-			areaId = parseInt(hash.replace("area-", ""));
-			retriveGeoJsonArea(areaId);
-		} else {
-			infoMarker = L.marker([63.37908, 10.43305]).addTo(map)
-		    .bindPopup('<h6>Velkommen til Okart-bestilleren!</h6><p>Før du begynner må du trykke på et område i listen til venstre for å se det i kartet.</p><p>Etter det kan du trykke på et kartutsnitt markert med rødt for å se mer informasjon og for å bestille det.</p><p>Du kan også bruke verktøyene til venstre for å tegne ditt eget.</p>')
-		    .openPopup();
-		}
-
+	

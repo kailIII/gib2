@@ -1,0 +1,51 @@
+body {
+        padding-top: 41px;
+        padding-bottom: 0;
+      }
+      .sidebar-nav {
+        padding: 9px 0;
+      }
+      #map, #infoArea, .container-fluid,.row-fluid {
+      	height: 100%;
+        
+      }
+      .missingInput {
+        background-color: rgb(255, 200, 200) !important;
+      }
+      p {
+        color: #999999;
+      }
+      
+      .height100 {
+        height: 100%;
+      }
+      #orderFormContainer {
+      	height: 100%;
+      }
+      .container-fluid {
+        padding-left: 5px;
+        padding-right: 5px;
+      }
+      @media (max-width: 980px) {
+        /* Enable use of floated navbar text */
+        .navbar-text.pull-right {
+          float: none;
+          padding-left: 5px;
+          padding-right: 5px;
+        }
+      }
+      .well {
+        margin-bottom: 3px;
+      }
+
+     body, html {
+      height: 90%;
+     }
+     textarea {
+      min-height: 150px;
+     }
+     input, textarea {
+      width:95%;
+     }
+     .leaflet-control-zoom-fullscreen { background-image: url('../images/icon-fullscreen.png'); }
+     .leaflet-container:-webkit-full-screen { width: 100% !important; height: 100% !important; }

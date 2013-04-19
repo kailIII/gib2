@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 import cgi, cgitb, shapefile,shutil,zipfile,os,sendmail
 print "Content-Type: text/html\n\n"
-os.chdir('..')
 form = cgi.FieldStorage()
 test = form.getvalue("polygon")
 name = form.getvalue("name")
@@ -10,6 +9,7 @@ street = form.getvalue("street")
 postcode = form.getvalue("postcode")
 place = form.getvalue("place")
 comments = form.getvalue("comments")
+os.chdir('..')
 w = shapefile.Writer(shapefile.POLYGON)
 i = 0
 f = open('order.txt', 'r')
@@ -39,7 +39,6 @@ for latlng in test:
 		w.poly(parts=polygon)
 		w.record(ordernr,name,email,street,postcode,place,comments,i)	
 		i = i+1
-
 w.save(filename)
 f = open('order.txt','w')
 f.write(str(ordernr));

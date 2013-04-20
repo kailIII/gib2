@@ -1,63 +1,34 @@
-
+﻿
 		var geoJson;
 		var basketGroup = L.featureGroup();
 		basketGroup.addTo(map);
 		var basketId= 0;
-		var predefinedMaps = L.geoJson();
-		
-		function clearDisplayedMaps() {
-			if(map.hasLayer(geoJson)) {
-				map.removeLayer(geoJson);
-				geoJson.eachLayer(function (layer) {
-					map.removeLayer(layer.tileLayer);
-				});
-			}
-			if(map.hasLayer(predefinedMaps)) {
-				map.removeLayer(predefinedMaps);
-				predefinedMaps.eachLayer(function (layer) {
-					map.removeLayer(layer.tileLayer);
-				});
-			}
+		var predefinedMaps = L.geoJson("",{
+				style: myStyle,
+				minZoom: 10
+			});
 
-		}
 		function addAreaGeoJsonData(area) {	
 			
 			geoJson =  L.geoJson(area, {
 				style: areaStyle
 			});
-			
-			geoJson.eachLayer(function (layer) {
-				
-				layer.predefined = true;
-				layer.tileLayer = L.TileLayer.boundaryCanvas(osmUrl, {
-	    			boundary: layer.getLatLngs(), 
-	    			attribution: osmAttribution,
-	    			minZoom: 8
-				});
-				
-				if(!map.hasLayer(layer.tileLayer)) {
-					layer.tileLayer.addTo(map);
-				}
-				
-			});
-
-			geoJson.addTo(map);
+			map.invalidateSize();
 			map.fitBounds(geoJson.getBounds());
 			map.zoomIn();
-			predefinedMaps.bringToFront();
+			
 		}
 		
 		function addPredefinedMaps(area) {	
 			
-			predefinedMaps =  L.geoJson(area, {
-				style: myStyle
-			});
+			predefinedMaps.addData(area);
 			
 			predefinedMaps.eachLayer(function (layer) {
 				layer.name = layer.feature.properties.name;
 				layer.description = layer.feature.properties.description;
 				layer.areaId = areaId;
 				layer.predefined = true;
+				
 				layer.tileLayer = L.TileLayer.boundaryCanvas(osmUrl, {
 	    			boundary: layer.getLatLngs(), 
 	    			attribution: osmAttribution,
@@ -74,6 +45,7 @@
 						});
 					layer.on("click", function (e) {
 							currentSelectedLayer = layer;
+							map.fitBounds(layer.getBounds());
 					});
 					var popupContent = "<h5>"+layer.name+"</h5><p>"+layer.description+"</p><p><a href=\"javascript:void()\" onclick=\"addToBasket(currentSelectedLayer)\">Legg i kurv</a></p>";
 					layer.bindPopup(popupContent);
@@ -81,9 +53,7 @@
 					
 			});
 
-			predefinedMaps.addTo(map);
-			predefinedMaps.bringToFront();
-			
+						
 			
 		}
 
@@ -217,29 +187,31 @@
 			$("#basketLayerLink-"+layer.basketId).remove();
 			$("#orderMapRow-"+layer.basketId).remove();
 			basketGroup.removeLayer(layer);
-			map.removeLayer(layer.tileLayer)
+
 			layer.closePopup();
 			map.removeLayer(layer);
 		}
 		var areaId;
 		function retriveGeoJsonArea(id) {
-			clearDisplayedMaps();
+			
 			map.removeLayer(infoMarker);
 			areaId = id;
 			osmUrl = 'tiles/'+id+'/{z}_{x}_{y}.png';
 			$.get('php/sql2geojson.php?id='+id, function (data) {
 			     addAreaGeoJsonData(geoarea);
 			  }, "script");
-			retriveMaps(id);
+			
 			
 		}
-		function retriveMaps(id) {
-			areaId = id;
-			$.get('php/sql2geojson.php?type=map&id='+id, function (data) {
+	
+		function retriveMaps() {
+			
+			$.get('php/sql2geojson.php?type=map', function (data) {
 			     addPredefinedMaps(geoarea);
 			  }, "script");
 			
 		}
+		retriveMaps();
 		map.on('draw:drawstart', function (e) {
 			map.removeLayer(predefinedMaps);
 		});
@@ -337,6 +309,44 @@
 			map.invalidateSize();
 			
 		}
+		function addTiles(areaid) {
+			var tileUrl = 'tiles/'+areaid+'/{z}_{x}_{y}.png';
+			
+			$.get('php/sql2geojson.php?id='+areaid, function (data) {
+			     var geoJsons = L.geoJson(geoarea, { style: areaStyle });
+			     geoJsons.eachLayer(function (layer) {
+					    L.TileLayer.boundaryCanvas(tileUrl, {
+		    			boundary: layer.getLatLngs(), 
+		    			attribution: osmAttribution,
+minZoom: 10
+
+						}).addTo(map);
+			    
+				layer.on("click", function (e) {
+					map.fitBounds(e.target.getBounds());
+						});
+ });
+				geoJsons.addTo(map);
+				predefinedMaps.bringToFront();
+			  }, "script");
+		
+			
+			
+			
+		}
+		
+		function displayAllTiles() {
+			
+			$.getJSON('php/areas.php', function (data) {
+				for (var i = 0; i < data.areas.length; i++) {
+					data.areas[i];
+					addTiles(data.areas[i]);
+	
+				};
+
+			});
+		}
+		displayAllTiles();
 		var infoMarker = L.marker();
 		var hash = window.location.hash.substring(1);
 		if(hash.indexOf("area-")>-1) {
@@ -344,7 +354,14 @@
 			retriveGeoJsonArea(areaId);
 		} else {
 			infoMarker = L.marker([63.37908, 10.43305]).addTo(map)
-		    .bindPopup('<h3>Velkommen til Okart!</h3><h5>Før du begynner må du trykke på et område i listen til venstre for å se det i kartet.</h5><h6>Etter det kan du trykke på et kartutsnitt markert med rødt for å se mer informasjon og for å legge det til bestilling.</h6><h6>Du kan også bruke verktøyene til venstre for å tegne ditt eget.</h6>')
+		    .bindPopup('<h3>Velkommen til Okart!</h3><h5>Trykk på et område i listen til venstre for å se nærmere på det.</h5><h6>Kartene er markert i rødt. Trykk på et kart for å se mer informasjon og for å legge det til bestilling.</h6><h6>Dersom ingen av kartene skulle passe dine behov kan du bruke verktøyene til venstre for å tegne ditt eget.</h6>')
 		    .openPopup();
 		}
+map.on("popupclose",function (e) {
+	if(map.hasLayer(infoMarker)) {
+		map.removeLayer(infoMarker);
+	}
+});
+predefinedMaps.addTo(map);
+predefinedMaps.bringToFront();
 

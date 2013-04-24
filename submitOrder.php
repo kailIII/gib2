@@ -22,12 +22,13 @@ $arguments = array($_POST['orderName'], $_POST['orderStreet'],
 $sth->execute($arguments);
 $orderId = $dbh->lastInsertId();
 try {
-$polygonInsert = "INSERT INTO `okart_orderpolygons`(`orderid`, `area`, `name`, `polygon`) VALUES (?,?,?,POLYGONFROMTEXT(?));";
+$polygonInsert = "INSERT INTO `okart_orderpolygons`(`orderid`, `area`, `num`, `name`, `polygon`) VALUES (?,?,?,?,POLYGONFROMTEXT(?));";
 $sth = $dbh->prepare($polygonInsert);
 foreach ($_POST['mapNames'] as $key => $mapName) {
 	$mapPolygon = $_POST['mapPolygons'][$key];
 	$mapArea = $_POST['mapAreas'][$key];
-	$arguments = array($orderId, $mapArea, $mapName, $mapPolygon);
+	$numMaps= $_POST['numMaps'][$key];
+	$arguments = array($orderId, $mapArea, $numMaps, $mapName, $mapPolygon);
 	$sth->execute($arguments);
 }
 } catch (PDOException $e) {

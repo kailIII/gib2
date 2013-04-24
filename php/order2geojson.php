@@ -1,7 +1,7 @@
 <?php
 require('sql.php');
 if($_GET['type'] == "order"){
-	$sql = 'SELECT id, name, area, AsText(polygon) as polygon FROM okart_orderpolygons WHERE orderid = ?';
+	$sql = 'SELECT id, name, area, num, AsText(polygon) as polygon FROM okart_orderpolygons WHERE orderid = ?';
 }
 else {
 	$sql = 'SELECT id, name, AsText(polygon) as polygon, description FROM okart_polygons WHERE areaid = ?';
@@ -20,6 +20,7 @@ $j = 0;
 foreach($area as $polygon) {
 	$id = $polygon['id'];
 	$name = $polygon['name'];
+	$num = $polygon['num'];
 	$description = $polygon['description'];
 	$areaid = $polygon['area'];
 	$coordinates = str_replace('POLYGON', '', $polygon['polygon']);
@@ -42,7 +43,7 @@ foreach($area as $polygon) {
 		}
 	}
 	$coordinates .= '] ]';
-	$feature = '{ "type": "Feature", "properties": { "id": '.$id.', "area": '.$areaid.', "name": "'.$name.'", "description": "'.$description.'" }, "geometry": { "type": "Polygon", "coordinates": '.$coordinates.' } },
+	$feature = '{ "type": "Feature", "properties": { "id": '.$id.', "area": '.$areaid.', "name": "'.$name.'", "num": '.$num.', "description": "'.$description.'" }, "geometry": { "type": "Polygon", "coordinates": '.$coordinates.' } },
 	';
     print $feature;
 }

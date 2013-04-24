@@ -12,6 +12,27 @@ if($auth->check()) {
      $sql = "DELETE FROM `okart_areas` WHERE `id` = ?;";
       $sth = $dbh->prepare($sql);
       $sth->execute(array($_GET['deleteArea']));
+	$sql = "DELETE FROM `okart_maps` WHERE `areaid` = ?;";
+      $sth = $dbh->prepare($sql);
+      $sth->execute(array($_GET['deleteArea']));
+  $sql = "DELETE FROM `okart_polygons` WHERE `areaid` = ?;";
+      $sth = $dbh->prepare($sql);
+      $sth->execute(array($_GET['deleteArea']));
+      $dir = './tiles/'.$_GET['deleteArea'].'/';
+      $it = new RecursiveDirectoryIterator($dir);
+      $files = new RecursiveIteratorIterator($it,
+                   RecursiveIteratorIterator::CHILD_FIRST);
+      foreach($files as $file) {
+          if ($file->getFilename() === '.' || $file->getFilename() === '..') {
+              continue;
+          }
+          if ($file->isDir()){
+              rmdir($file->getRealPath());
+          } else {
+              unlink($file->getRealPath());
+          }
+      }
+      rmdir($dir);
   }
 
 ?>

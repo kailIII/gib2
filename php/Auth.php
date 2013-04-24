@@ -1,38 +1,42 @@
 <?php
 class Auth {
-	public $email, $id, $navn;
+	public $email, $id, $navn, $key;
 	function __construct() {
 		session_start();
 		$this->id = -1;
 		$this->check();
+
+
 	}
 	function check() {
-		$this->id = $_SESSION['id'];
-		$this->email = $_SESSION['email'];
-		$this->navn = $_SESSION['name'];
-		
-		if($this->id > -1) {
-			return $this->id;
+		$this->id = $_COOKIE['okart_user'];		
+		if($_COOKIE['okart_user'] > -1) {
+			$this->key = md5($_SERVER['REMOTE_ADDR'].$_COOKIE["okart_name"].$_COOKIE['okart_user']);
+			if($this->key === $_COOKIE["okart_key"]) {
+				return $_COOKIE['okart_user'];
+			}
+			
 		}
 		$this->redirectLogIn();
 
 	}
 	function logIn($user,$password) {
-		require_once('sql.php');
+		require('sql.php');
 		$query = "SELECT * FROM `okart_users` WHERE `email` = ? LIMIT 1;";
 		$sth = $dbh->prepare($query);
 		$sth->execute(array($user));
 		$bruker = $sth->fetch(PDO::FETCH_ASSOC);
 		if(!$bruker['id']){
-			$_SESSION['email'] = '';
-			$_SESSION['userid'] = 0;
+			setcookie('okart_user', -1);
+			setcookie('okart_key', '');
 			return false;
 		}
 		else {
 			if($this->comparePassword($password, $bruker['password'])) {
-				$_SESSION['email'] = $bruker['email'];
-				$_SESSION['name'] = $bruker['name'];
-				$_SESSION['id'] = $bruker['id'];
+				$this->key = md5($_SERVER['REMOTE_ADDR'].$bruker["name"].$bruker['id']);
+				setcookie('okart_user', $bruker['id'], time()+60*60*24*30);
+				setcookie('okart_name', $bruker['name'], time()+60*60*24*30);
+				setcookie('okart_key', $this->key, time()+60*60*24*30);
 				return true;
 			}
 			else {
@@ -42,9 +46,8 @@ class Auth {
 		}	
 	}
 	function logOut() {
-			$_SESSION['name'] = '';
-			$_SESSION['email'] = '';
-			$_SESSION['userid'] = -1;
+			setcookie('okart_user', -1);
+			setcookie('okart_key', '');
 	}
 	function getPasswordSalt()
 	{
@@ -64,31 +67,31 @@ class Auth {
 		$salt = substr( $hash, 0, 8 );
 		return $hash == $this->getPasswordHash( $salt, $password );
 	}
-	function newUser($email,$password,$name) {
+	function newUser($email,$password,$name, $alert) {
 		if($this->check()) {
 			require_once('sql.php');
-			$sql = "INSERT INTO `okart_users` (`email`, `password`, `name`) VALUES (?, ?, ?);";
+			$sql = "INSERT INTO `okart_users` (`email`, `password`, `name`, `sendmail`) VALUES (?, ?, ?, ?);";
 			$sth = $dbh->prepare($sql);
 			$salt = $this->getPasswordSalt();
 			$hash = $this->getPasswordHash($salt, $password);
-			$sth->execute(array($email,$hash,$name));
+			$sth->execute(array($email,$hash,$name, $alert));
 			return true;
 		}
 		return false;
 	}
-	function updateUser($email, $password, $name) {
+	function updateUser($email, $password, $name, $alert) {
 		if($this->check()) {
 			require_once('sql.php');
 			if($password == '') {
-			$sql = "UPDATE `okart_users` SET `name` = ?, `email` = ? WHERE `okart_users`.`id` = ?;";
+			$sql = "UPDATE `okart_users` SET `name` = ?, `email` = ?, `sendmail` = ? WHERE `okart_users`.`id` = ?;";
 			$sth = $dbh->prepare($sql);
-			$sth->execute(array($name,$email,$this->id));
+			$sth->execute(array($name,$email,$alert,$this->id));
 		} else {
-			$sql = "UPDATE `okart_users` SET `name` = ?, `email` = ?, `password` = ? WHERE `okart_users`.`id` = ?;";
+			$sql = "UPDATE `okart_users` SET `name` = ?, `email` = ?, `sendmail` = ?, `password` = ? WHERE `okart_users`.`id` = ?;";
 			$sth = $dbh->prepare($sql);
 			$salt = $this->getPasswordSalt();
 			$hash = $this->getPasswordHash($salt, $password);
-			$sth->execute(array($name,$email,$hash,$this->id));
+			$sth->execute(array($name,$email,$alert,$hash,$this->id));
 		}
 			
 			return true;

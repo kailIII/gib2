@@ -1,32 +1,6 @@
 		var result;
-
-		map.on('draw:created', function (e) {
-			
-				layer = e.layer;
-			currentSelectedLayer = layer;
-			layer.setStyle(myStyle);
-			drawnItems.addLayer(layer);
-			layer.predefined = false;
-			layer.on("mouseover", function (e) {
-					e.target.setStyle(hiStyle);
-
-				});
-			layer.on("mouseout", function (e) {
-					e.target.setStyle(myStyle);
-
-				});
-			layer.on("click", function (e) {
-					currentSelectedLayer = e.target;
-					map.invalidateSize();
-					map.fitBounds(e.target.getBounds());
-					editLayer(e.target);
-					
-
-			});
-			drawnItemsCounter++;
-			layer.name = "Egendefinert "+drawnItemsCounter;
+		var drawnItemsCounter = 0;
 		
-		});	
 		function editLayer(layer) {
 			var nameField = document.getElementById("map-name");
 			nameField.value = layer.name;
@@ -119,7 +93,7 @@
 			theForm.submit();
 		
 		}
-		map.addControl(drawControl);
+		
 		function loadTiles(areaId) {
 			var osmUrl = 'tiles/'+areaId+'/{z}_{x}_{y}.png';
 			var newTileMap = L.tileLayer(osmUrl, {
@@ -171,12 +145,43 @@
 			var descField = document.getElementById("map-desc");
 			currentSelectedLayer.description = descField.value;
 		}
-		var hash = window.location.hash.substring(1);
-		if(hash.indexOf("tileid-")>-1) {
-			areaId = parseInt(hash.replace("tileid-", ""));
-			loadTiles(areaId);
-		}
-		if(hash.indexOf("areaid-")>-1) {
-			areaId = parseInt(hash.replace("areaid-", ""));
-			retriveGeoJsonArea(areaId);
+		function doRest() {
+			map.on('draw:created', function (e) {
+			
+				layer = e.layer;
+			currentSelectedLayer = layer;
+			layer.setStyle(myStyle);
+			drawnItems.addLayer(layer);
+			layer.predefined = false;
+			layer.on("mouseover", function (e) {
+					e.target.setStyle(hiStyle);
+
+				});
+			layer.on("mouseout", function (e) {
+					e.target.setStyle(myStyle);
+
+				});
+			layer.on("click", function (e) {
+					currentSelectedLayer = e.target;
+					map.invalidateSize();
+					map.fitBounds(e.target.getBounds());
+					editLayer(e.target);
+					
+
+			});
+			drawnItemsCounter++;
+			layer.name = "Egendefinert "+drawnItemsCounter;
+		
+		});	
+			map.addControl(drawControl);
+			if(hash.indexOf("tileid-")>-1) {
+				areaId = parseInt(hash.replace("tileid-", ""));
+				loadTiles(areaId);
+			}
+			if(hash.indexOf("areaid-")>-1) {
+				areaId = parseInt(hash.replace("areaid-", ""));
+				retriveGeoJsonArea(areaId);
+			}
+			drawnItems.addTo(map);
+			drawnItems.bringToFront();
 		}

@@ -34,7 +34,7 @@ if($auth->check()) {
     <![endif]-->
    
 </head>
-<body>
+<body class="height100">
 
     <div class="navbar navbar-inverse navbar-fixed-top">
       <div class="navbar-inner">
@@ -49,14 +49,14 @@ if($auth->check()) {
       </div>
     </div>
 
-    <div class="container-fluid">
-      <div class="row-fluid">
+    <div class="container-fluid height100">
+      <div class="row-fluid height100">
         <div class="span2">
             <?php
          include('menu.php');
          ?>
         </div><!--/span-->
-        <div class="span8" id="map">
+        <div class="span8" style="heigth: 480px;" id="map">
             <script src="js/common.js"></script>
             <script src="js/definearea.js"></script>
         </div>
@@ -75,9 +75,9 @@ if($auth->check()) {
           <div class="well">
             <h4>Kartinfo:</h4>
             <h5>Navn:</h5>
-            <p><input name="mapName" id="map-name" onchange="updateName()"></p>
+            <p><input name="mapName" id="map-name" onkeyup="updateName()"></p>
             <h5>Beskrivelse:</h5>
-            <p><textarea name="mapDescription" id="map-desc" onchange="updateDescription()"></textarea></p>  
+            <p><textarea name="mapDescription" id="map-desc" onkeyup="updateDescription()"></textarea></p>  
           </div>
           
         </div><!--/span-->

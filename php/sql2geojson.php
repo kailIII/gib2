@@ -2,7 +2,7 @@
 
 require('sql.php');
 if($_GET['type'] == "map") {
-	$sql = 'SELECT id, name, description, AsText(polygon) as polygon FROM okart_maps WHERE areaid = ?';
+	$sql = 'SELECT id, name, description, AsText(polygon) as polygon FROM okart_maps';
 }
 else {
 	$sql = 'SELECT id, AsText(polygon) as polygon FROM okart_polygons WHERE areaid = ?';

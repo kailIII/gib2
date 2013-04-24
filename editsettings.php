@@ -4,12 +4,10 @@ require('php/Auth.php');
 $auth = new Auth();
 if($auth->check()) {
  if($_POST['newUser']) {
-    if($_POST['alert']) {
-      $alert = 1;
-    } else {
-      $alert = 0;
-    }
-  $auth->updateUser($_POST['email'], $_POST['password'], $_POST['name'], $alert);
+  require('php/sql.php');
+  $sql = "UPDATE `okart_settings` SET `textboks` = ?, `markertext` = ?, `centerLat` = ?, `centerLong` = ?, `defaultZoom` = ? LIMIT 1;";
+  $sth = $dbh->prepare($sql);
+  $sth->execute(array(html_entity_decode($_POST['textboks']),html_entity_decode($_POST['markertext']),$_POST['lat'],$_POST['long'],$_POST['zoom']));
  }
 
 ?>
@@ -77,34 +75,40 @@ enctype="multipart/form-data">
             <?php
                 
 require('php/sql.php'); 
-                $sql = "SELECT * FROM `okart_users` WHERE `id` = ?";
+                $sql = "SELECT * FROM `okart_settings` LIMIT 1";
                 $sth = $dbh->prepare($sql);
-                $sth->execute(array($auth->id));
+                $sth->execute();
                 
                 $results = $sth->fetch();
                 
                 ?>
-                <h4>Endre bruker:</h4>
+                <h4>Endre innstillinger:</h4>
+                <h6>
+                  Tekstboks: 
+                </h6>
                 <p>
-                  Navn: 
+                  <textarea type="text" name="textboks"><?php print $results['textboks']; ?></textarea>
                 </p>
-                <p>
-                  <input type="text" name="name" value="<?php print $results['name']; ?>">
-                </p>
-                <p>
-                  E-post:
-                </p>
+                <h6>
+                  Markørtekst:
+                </h6>
                 
-                  <input type="text" name="email" value="<?php print $results['email']; ?>">
+                  <textarea type="text" name="markertext"><?php print $results['markertext']; ?></textarea>
                 
+                <h6>
+                  Startpunkt:
+                </h6>
                 <p>
-                  Passord:
+                  Lat: <input type="text" name="lat" value="<?php print $results['centerLat']; ?>">
+                  Grader på desimalform
                 </p>
                 <p>
-                  <input type="password" name="password">
+                  Long: <input type="text" name="long"  value="<?php print $results['centerLong']; ?>">
+                  Grader på desimalform
                 </p>
                 <p>
-                  Varsle meg om nye bestillinger <input type="checkbox" name="alert" value="1" <?php if($results['sendmail'] == 1) { print "checked"; } ?>>
+                  Zoom: <input type="text" name="zoom"  value="<?php print $results['defaultZoom']; ?>">
+                  Heltall mellom 8-17
                 </p>
                 
                  <hr>

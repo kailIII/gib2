@@ -100,11 +100,13 @@ if($auth->check()) {
            </div>
            <div class="row-fluid">
            <div class="span9">
+            <h4>Kommentar:</h4>
+            <p id="comment">
+              &nbsp;
+            </p>
            </div>
-           <div class="span2">
-            
-           </div>
-          <div class="span1">
+
+          <div class="span3">
             <?php
             if($_GET['archive']) {
               print '<button class="btn btn-success  pull-right" id="finishButton">Gjennoprett</button>';
@@ -114,6 +116,7 @@ if($auth->check()) {
             }
               
             ?>
+            <button class="btn btn-info" id="exportShapeButton">Eksporter til shape...</button>
            </div>
          </div>
         </div><!--/span-->
@@ -175,16 +178,22 @@ foreach($orders as $order) {
             print $order['id'];
             print '</a></div>
               <div class="span3">
-                <a>';
+                <a href="javascript:void(0)" onclick="retriveGeoJsonOrders(';
+            print $order['id'];
+            print ')">';
             print $order['orderdate'];
             print '</a></div>
               <div class="span3">
-                <a>';
+                <a href="javascript:void(0)" onclick="retriveGeoJsonOrders(';
+            print $order['id'];
+            print ')">';
             print $order['rundate'];
             print '</a>
               </div>
               <div class="span3">
-                <a>';
+                <a href="javascript:void(0)" onclick="retriveGeoJsonOrders(';
+            print $order['id'];
+            print ')">';
             print $order['name'];
             print '</a>
               </div>
@@ -208,7 +217,7 @@ foreach($orders as $order) {
     ================================================== -->
     <!-- Placed at the end of the document so the pages load faster -->
 
-
+<form id="shapes" name="shapes" target="_blank" method="post" action="python/okart.cgi"></form>
 </body>
 </html>
 <?php

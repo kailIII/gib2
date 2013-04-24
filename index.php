@@ -50,14 +50,9 @@
     </div>
 
     <div class="container-fluid">
-      <div class="row-fluid">
+      <div class="row-fluid height100">
         <div class="span2" id="menus">
-        <div class="well alert-important" >
-                <h6>Hjelp</h6>
-                <p>Trykk på et område i listen under for å se det i kartet.</p>
-                <p>Trykk på et kartutsnitt for å se mer info og for å legge det til bestilling.</p>
-                <p>Du kan også bruke verktøyene til venstre for å tegne ditt eget.</p>
-          </div>
+        
           <div class="well sidebar-nav">
             <ul class="nav nav-list">
               
@@ -71,26 +66,28 @@ $sth->execute();
 $areas = $sth->fetchAll(PDO::FETCH_ASSOC);
 $kommune = $areas[0]['kommune'];
 $fylke = $areas[0]['fylke'];
-print '<li class="nav-header">'.$fylke.'</li><ul>';
-print '<li class="nav-header">'.$kommune.'</li><ul>';
+print '<li class="nav-header nav-fylke">'.$fylke.'</li>';
+print '<li class="nav-header nav-kommune">'.$kommune.'</li>';
 foreach($areas as $area) {
   if($fylke != $area['fylke'] && $kommune != $area['kommune']) {
     $fylke = $area['fylke'];
     $kommune = $area['kommune'];
-    print '</ul></ul>';
-    print '<li class="nav-header">'.$fylke.'</li><ul>';
-    print '<li class="nav-header">'.$kommune.'</li><ul>';
+    print '';
+    print '<li class="nav-header nav-fylke>'.$fylke.'</li>';
+    print '<li class="nav-header nav-kommune">'.$kommune.'</li>';
   }
   if($kommune != $area['kommune']) {
     $kommune = $area['kommune'];
-    print '</ul><li class="nav-header">'.$area['kommune'].'</li><ul>';
+    print '<li class="nav-header nav-kommune">'.$area['kommune'].'</li>';
   }
   print '<li id="list-area-'.$area['id'].'"><a id="link-area-'.$area['id'].'" href="#area-'.$area['id'].'" OnClick="retriveGeoJsonArea('.$area['id'].');">'.$area['name'].'</a></li>';
 }
-print '</ul></ul>';
+print '</ul>';
 ?>
             </ul>
           </div><!--/.well -->
+          <div class="well alert-important" id="helpBox">
+          </div>
           <div class="well sidebar-nav">
             <ul class="nav nav-list">
               <li class="nav-header">Kurv</li>
@@ -104,9 +101,6 @@ print '</ul></ul>';
           </div>
         </div>
         
-            <div id="map" class="span10" ></div>
-            <script src="js/common.js"></script>
-            <script src="js/map.js"></script>
           
           
         
@@ -147,10 +141,15 @@ print '</ul></ul>';
               * Påkrevd
             </p>
             <div class="row-fluid" id="mapList">
-              <div class="span12">
-                <hr>
+              
+              <div class="span9">
                 <h5>Kart til bestilling:</h5>
-
+              </div>
+              <div class="span2">
+                <h5>Antall:</h5>
+              </div>
+              <div class="span1">
+                
               </div>
             </div>
           
@@ -183,7 +182,10 @@ print '</ul></ul>';
       </div><!--/row-->
 
      
-
+  <div id="map" class="span10" ></div>
+            <script src="js/common.js"></script>
+            <script src="js/map.js"></script>
+          
     </div><!--/.fluid-container-->
 
     <!-- Le javascript

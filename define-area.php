@@ -58,15 +58,15 @@ if($auth->check()) {
       </div>
     </div>
 
-    <div class="container-fluid">
-      <div class="row-fluid">
+    <div class="container-fluid height100">
+      <div class="row-fluid height100">
         <div class="span2">
          <?php
          include('menu.php');
          ?>
         </div><!--/span-->
         
-        <div class="span8" id="map">
+        <div class="span8 height100" id="map">
             <script src="js/common.js"></script>
             <script src="js/definearea.js"></script>
         </div>

@@ -3,7 +3,12 @@ require('php/Auth.php');
 $auth = new Auth();
 if($auth->check()) {
   if($_POST['newUser']) {
-    $auth->newUser($_POST['email'],$_POST['password'],$_POST['name']);
+    if($_POST['alert']) {
+      $alert = 1;
+    } else {
+      $alert = 0;
+    }
+    $auth->newUser($_POST['email'],$_POST['password'],$_POST['name'], $alert);
   }
   if($_GET['delete']) {
     $auth->deleteUser($_GET['delete']);
@@ -91,6 +96,9 @@ enctype="multipart/form-data">
                 </p>
                 <p>
                  
+                </p>
+                <p>
+                  Varsle meg om nye bestillinger <input type="checkbox" name="alert" value="1" checked>
                 </p>
                 <p>
                   <input type="submit" name="newUser" value="Legg til..." class="btn btn-success span12">
